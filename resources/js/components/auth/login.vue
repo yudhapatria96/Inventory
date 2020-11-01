@@ -16,9 +16,14 @@
       <div class="form-group">
         <input type="email" class="form-control" id="exampleInputEmail" aria-describedby="emailHelp"
           placeholder="Enter Email Address" v-model="form.email">
+        <!-- errornya disini -->
+          <small class="text-danger" v-if="errors.email">{{ errors.email[0] }}</small>
+          
       </div>
       <div class="form-group">
         <input type="password" class="form-control" id="exampleInputPassword" placeholder="Password" v-model="form.password">
+        <small class="text-danger" v-if="errors.password">{{ errors.password[0] }}</small>
+
       </div>
       <div class="form-group">
         <div class="custom-control custom-checkbox small" style="line-height: 1.5rem;">
@@ -60,22 +65,57 @@
 
 <script type="text/javascript">
   export default {
-
+    //akan bekerja setelah login() bekerja
+   created(){
+     if(User.loggedIn()){
+        this.$router.push({name: 'home'});
+     }
+   }, 
    data(){
     return {
       form:{
-        email: null,
-        password: null
+        email: '',
+        password: ''
       },
-      errors:{}
+      errors:{
+        email: '',
+        password: ''
+      }
     }
   },
    methods:{
     login(){
      axios.post('/api/auth/login',this.form)
-     .then(res => User.responseAfterLogin(res))
-     .catch(error => console.log(error.response.data))
+     .then(res => {
+       User.responseAfterLogin(res)
+
+      Toast.fire({
+        icon: 'success',
+        title: 'Signed in successfully'
+      })
+
+       this.$router.push({ name: 'home'})
+
+       }) 
+     
+    .catch(error =>{
+
+      if(error.response.data.errors == null){
+      Toast.fire({
+        icon: 'warning',
+        title: 'Invalid Email or Password'
+      });
+      }
+      console.log(error.response.data);
+      this.errored = true;
+      this.errors = error.response.data.errors
+
+    })
+    
+
+    
     }
+
   }
 
 
